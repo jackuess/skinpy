@@ -8,7 +8,13 @@ try:
 except ImportError:
     console_colors = None
 
+from .utils import CallProxy
 
+get_reporter = CallProxy()
+
+
+@get_reporter.register("default")
+@get_reporter.register("console")
 class ConsoleReporter(object):
     SUCCESS_TEMPLATE = "  ✓ {msg}"
     ERROR_TEMPLATE = "  ✗ {msg}"
@@ -54,6 +60,7 @@ class ConsoleReporter(object):
 
 
 if console_colors:
+    @get_reporter.register("color_console")
     class ColorConsoleReporter(ConsoleReporter):
         SUCCESS_TEMPLATE = ConsoleReporter.SUCCESS_TEMPLATE.replace(
             "✓", "{green}✓{reset}".format(
@@ -82,6 +89,7 @@ if console_colors:
                 reset=console_colors.RESET
             ))
 
+    @get_reporter.register("blinking_color_console")
     class BlinkingColorConsoleReporter(ColorConsoleReporter):
         def on_error(self, msg):
             with console_colors.Blink():
