@@ -2,22 +2,28 @@ Skinpy
 =========
 Basic usage
 -----------
+Testable
+--------
+`Testable` is the corner stone in Skinpy.
+
 .. code-block:: python
 
     >>> from skinpy import Testable
     >>> Testable("foo").should_equal("foo")
+    <Testable(subject='foo')>
     >>> Testable("foo").should_equal("bar")
     Traceback (most recent call last):
         ...
-    AssertionError: foo doesn't equal 'bar'
+    AssertionError: 'foo' doesn't equal 'bar'
 
 .. code-block:: python
 
     >>> Testable({"foo": "bar"})["foo"].should_equal("bar")
+    <Testable(subject={'foo': 'bar'}['foo'])>
     >>> Testable({"foo": "bar"})["foo"].should_equal("foo")
     Traceback (most recent call last):
         ...
-    AssertionError: {'foo': 'bar'}['foo']: 'bar' doesn't equal 'foo'
+    AssertionError: {'foo': 'bar'}['foo'] doesn't equal 'foo'
 
 
 .. code-block:: python
@@ -33,16 +39,18 @@ Basic usage
     ...
     >>> foo = Foo()
     >>> Testable(foo).foo.should_equal("bar")
+    <Testable(subject=<Foo()>.foo)>
     >>> Testable(foo).foo.should_equal("foo")
     Traceback (most recent call last):
         ...
-    AssertionError: <Foo()>.foo: 'bar' doesn't equal 'foo'
+    AssertionError: <Foo()>.foo doesn't equal 'foo'
     >>> Testable(foo).foobar(foo).foo.should_equal("bar")
-    >>> Testable(foo).foobar("foobar").should_equal("barfoo")  # doctest: +SKIP
+    <Testable(subject=<Foo()>.foobar(<Foo()>).foo)>
+    >>> Testable(Foo)().foobar("foobar").should_equal("barfoo")
     Traceback (most recent call last):
         ...
-    AssertionError: <Foo()>.foobar('foobar'): 'foobar' doesn't equal 'barfoo'
-    >>> Testable(foo).foobar(5).should_raise(ValueError)  # doctest: +ELLIPSIS
+    AssertionError: Foo().foobar('foobar') doesn't equal 'barfoo'
+    >>> Testable(foo).foobar(5).should_raise(ValueError)
     Traceback (most recent call last):
         ...
-    AssertionError: foobar doesn't raise <... '...ValueError'>
+    AssertionError: <Foo()>.foobar(5) doesn't raise ValueError

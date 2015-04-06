@@ -1,31 +1,42 @@
 import itertools
 
-from .reporters import PassthroughReporter
+
+class ExceptionPassthrough(object):
+    def __init__(self, testable):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 
 class Testable(object):
     def __init__(self, subject, args=((), {}), name=None,
-                 reporter=PassthroughReporter()):
+                 assertion_ctx=ExceptionPassthrough):
         self.__subject = subject
         self.__args, self.__kwargs = args
-        self.__name = name
-        self.__reporter = reporter
+        self.__name = (name or getattr(subject, "__name__", None) or
+                       repr(subject))  # TODO: Handle exception in repr
+        self.__assertion_ctx = assertion_ctx
+        self.__success_messages = []
 
     @property
     def value(self):
-        try:
+        if hasattr(self.__subject, "__call__"):
             return self.__subject(*self.__args, **self.__kwargs)
-        except TypeError:
+        else:
             return self.__subject
 
     def __getitem__(self, key):
         return Testable(self.value[key], name="{}[{!r}]".format(self, key),
-                        reporter=self.__reporter)
+                        assertion_ctx=self.__assertion_ctx)
 
     def __getattr__(self, name):
         value = getattr(self.value, name)
         return Testable(value, name="{}.{}".format(self, name),
-                        reporter=self.__reporter)
+                        assertion_ctx=self.__assertion_ctx)
 
     def __call__(self, *args, **kwargs):
         args_repr = itertools.chain(
@@ -34,38 +45,41 @@ class Testable(object):
         )
         return Testable(self.__subject,
                         args=(args, kwargs),
-                        name="{}({})".format(self.__subject.__name__,
-                                             ", ".join(args_repr)),
-                        reporter=self.__reporter)
+                        name="{}({})".format(self, ", ".join(args_repr)),
+                        assertion_ctx=self.__assertion_ctx)
 
     def __str__(self):
         if self.__name:
-            return "{}: {!r}".format(self.__name, self.value)
-        return str(self.value)
+            prefix = self.__name
+        else:
+            prefix = repr(self.value)
+
+        if self.__success_messages:
+            return "\n".join("{} {}".format(prefix, msg)
+                             for msg in self.__success_messages)
+        else:
+            return prefix
+
+    def __repr__(self):
+        return "<Testable(subject={})>".format(self.__name)
 
     def should_equal(self, expected):
-        with self.__reporter.make_assertion() as assertion:
-            error_msg = "{} doesn't equal {!r}".format(self, expected)
+        error_msg = "{} doesn't equal {!r}".format(self, expected)
+        with self.__assertion_ctx(self):
             assert self.value == expected, error_msg
-            assertion.success("{} equals {!r}".format(self, expected))
+            self.__success_messages.append("equals {!r}".format(expected))
+            return self
 
     def should_raise(self, expected_exc):
-        subject_name = self.__subject.__name__
-        with self.__reporter.make_assertion() as assertion:
+        with self.__assertion_ctx(self):
             try:
                 self.value
             except expected_exc:
-                assertion.success("{} raises {!r}".format(subject_name,
-                                                          expected_exc))
-            except Exception as exc:
-                raise AssertionError(
-                    "{} doesn't raise {!r}, it raises {!r}".format(
-                        subject_name,
-                        expected_exc,
-                        exc
-                    )
+                self.__success_messages.append(
+                    "raises {}".format(expected_exc.__name__)
                 )
+                return self
             else:
                 raise AssertionError(
-                    "{} doesn't raise {!r}".format(subject_name, expected_exc)
+                    "{} doesn't raise {}".format(self, expected_exc.__name__)
                 )
