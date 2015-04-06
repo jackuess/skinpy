@@ -7,7 +7,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as readme:
 
 setup(
     name="skinpy",
-    version="0.0.1",
+    version="0.0.2",
     description="",
     long_description=long_description,
     license="LGPL v3",
@@ -18,7 +18,7 @@ setup(
 
     packages=["skinpy"],
 
-    install_requires=[],
+    install_requires=["console_colors"],
     tests_require=["nose", "mock"],
     test_suite="nose.collector",
     extras_require={
