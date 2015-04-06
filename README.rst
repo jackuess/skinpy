@@ -25,15 +25,14 @@ Writing tests
     >>> reporter = TerminalReporter()
     >>> test_result = StringDescription().execute(reporter)  # doctest: +ELLIPSIS
     str
-    ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-    str('foo') equals 'foo' ✓
-    str('foo') doesn't equal 'bar' ✗
-    str('foo').join(['bar', 'BAR']) equals 'barfooBAR' ✓
-    str(',').join(['bar', 'BAR']) doesn't equal 'barfooBAR' ✗
-    str('{0:.2f}').format('foo') raises ValueError ✓
-    "str('{0:.2f}').format('foo')" raised a ValueError. Traceback:
-      ...
-    ValueError: ...
+      ✓ str('foo') equals 'foo'
+      ✗ str('foo') doesn't equal 'bar'
+      ✓ str('foo').join(['bar', 'BAR']) equals 'barfooBAR'
+      ✗ str(',').join(['bar', 'BAR']) doesn't equal 'barfooBAR'
+      ✓ str('{0:.2f}').format('foo') raises ValueError
+      "str('{0:.2f}').format('foo')" raised a ValueError. Traceback:
+        ...
+      ValueError: ...
     >>> test_result
     <TestResult(successful=3, failed=2, errors=1)
 
@@ -59,14 +58,12 @@ Writing tests
     ...         yield self.int(5.5).should_equal(5)
     ...
     >>> test_result += IntDescription().execute(reporter)  # doctest: +ELLIPSIS
-    ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
     <BLANKLINE>
     int
-    ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
     Set up
     Returning test subject
     Tear down
-    int(5.5) equals 5 ✓
+      ✓ int(5.5) equals 5
     >>> test_result
     <TestResult(successful=4, failed=2, errors=1)
 

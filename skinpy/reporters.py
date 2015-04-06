@@ -6,31 +6,37 @@ import traceback
 try:
     import console_colors
 except ImportError:
-    pass
+    console_colors = None
 
 
 class TerminalReporter(object):
+    SUCCESS_TEMPLATE = "  ✓ {msg}"
+    ERROR_TEMPLATE = "  ✗ {msg}"
+    TESTS_FINISHED_TEMPLATE = ("\n{line}\nRan {test_count} tests in "
+                               "{exec_time:.3f}s ({test_result})")
+
     def __init__(self):
         self._first_subject = True
 
     def on_new_subject(self, subject):
         if not self._first_subject:
-            print("―" * 80)
             print("")
         self._first_subject = False
         print("{}".format(subject))
-        self._print_horizontal_line()
 
     def on_success(self, msg):
-        print("{} ✓".format(msg))
+        print(self.SUCCESS_TEMPLATE.format(msg=msg))
 
     def on_error(self, msg):
-        print("{} ✗".format(msg))
+        print(self.ERROR_TEMPLATE.format(msg=msg))
 
     def on_tests_finished(self, test_result):
-        self._print_horizontal_line()
-        print("")
-        self._print_summary(test_result)
+        print(self.TESTS_FINISHED_TEMPLATE.format(
+            line="―" * 80,
+            test_count=len(test_result),
+            exec_time=time.time() - test_result.start_time,
+            test_result=test_result
+        ))
 
     def on_exception(self, exc_type, exc_value, tb, stack, testable):
         header, trace = self._format_exception(exc_type, exc_value, stack,
@@ -38,51 +44,45 @@ class TerminalReporter(object):
         print(header)
         print(trace)
 
-    def _print_horizontal_line(self):
-        print("―" * 80)
-
-    def _print_summary(self, test_result):
-        print("Ran {} tests in {:.3f}s ({})".format(
-            len(test_result),
-            time.time() - test_result.start_time,
-            test_result
-        ))
-
     def _format_exception(self, exc_type, exc_value, stack, testable):
-        yield "\"{}\" raised a {}. Traceback:".format(str(testable),
-                                                      exc_type.__name__)
-        yield "".join(
+        yield "  \"{}\" raised a {}. Traceback:".format(str(testable),
+                                                        exc_type.__name__)
+        yield "  " + "\n  ".join("".join(
             traceback.format_list(stack) +
             traceback.format_exception_only(exc_type, exc_value)
-        ).rstrip()
+        ).rstrip().splitlines())
 
 
-class ColorTerminalReporter(TerminalReporter):
-    def on_success(self, msg):
-        with console_colors.Foreground(console_colors.INTENSE_GREEN):
-            super(ColorTerminalReporter, self).on_success(msg)
+if console_colors:
+    class ColorTerminalReporter(TerminalReporter):
+        SUCCESS_TEMPLATE = TerminalReporter.SUCCESS_TEMPLATE.replace(
+            "✓", "{green}✓{reset}".format(
+                green=console_colors.INTENSE_GREEN.fg,
+                reset=console_colors.RESET))
+        ERROR_TEMPLATE = TerminalReporter.ERROR_TEMPLATE.replace(
+            "✗", "{green}✗{reset}".format(
+                green=console_colors.INTENSE_RED.fg,
+                reset=console_colors.RESET))
+        TESTS_FINISHED_TEMPLATE = (
+            "\n{line}\nRan {test_count} tests in {exec_time:.3f}s "
+            "{color}({test_result}){reset}"
+        )
 
-    def on_error(self, msg):
-        with console_colors.Foreground(console_colors.INTENSE_RED):
-            super(ColorTerminalReporter, self).on_error(msg)
+        def on_tests_finished(self, test_result):
+            if test_result.was_successful:
+                color = console_colors.INTENSE_GREEN.fg
+            else:
+                color = console_colors.INTENSE_RED.fg
+            print(self.TESTS_FINISHED_TEMPLATE.format(
+                line="―" * 80,
+                test_count=len(test_result),
+                exec_time=time.time() - test_result.start_time,
+                test_result=test_result,
+                color=color,
+                reset=console_colors.RESET
+            ))
 
-    def on_exception(self, exc_type, exc_value, tb, stack, testable):
-        header, trace = self._format_exception(exc_type, exc_value, stack,
-                                               testable)
-        with console_colors.Foreground(console_colors.INTENSE_RED):
-            print(header)
-        print(trace)
-
-    def on_tests_finished(self, test_result):
-        self._print_horizontal_line()
-        with console_colors.Foreground(
-                console_colors.INTENSE_GREEN if test_result.was_successful
-                else console_colors.INTENSE_RED):
-            print()
-            self._print_summary(test_result)
-
-
-class BlinkingColorTerminalReporter(ColorTerminalReporter):
-    def on_error(self, msg):
-        with console_colors.Blink():
-            super(BlinkingColorTerminalReporter, self).on_error(msg)
+    class BlinkingColorTerminalReporter(ColorTerminalReporter):
+        def on_error(self, msg):
+            with console_colors.Blink():
+                super(BlinkingColorTerminalReporter, self).on_error(msg)

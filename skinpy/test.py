@@ -1,7 +1,7 @@
 import time
 import traceback
 
-from .reporters import ColorTerminalReporter
+from .reporters import TerminalReporter
 from .testable import Testable
 
 
@@ -72,7 +72,7 @@ class Description(object):
     def assertion_ctx(self, testable):
         return AssertionCtx(self.reporter, self.test_result, testable)
 
-    def execute(self, reporter=ColorTerminalReporter()):
+    def execute(self, reporter=TerminalReporter()):
         self.reporter = reporter
 
         self.test_result = TestResult(start_time=time.time())
