@@ -6,7 +6,7 @@ Writing tests
 .. code-block:: python
 
     >>> from skinpy import Description, Subject
-    >>> from skinpy.reporters import TerminalReporter
+    >>> from skinpy.reporters import ConsoleReporter
     >>> class StringDescription(Description):
     ...     @Subject
     ...     def str(self):
@@ -22,7 +22,7 @@ Writing tests
     ...       yield self.str("{0:.2f}").format("foo").should_raise(ValueError)
     ...       yield self.str("{0:.2f}").format("foo").should_raise(TypeError)
     ...
-    >>> reporter = TerminalReporter()
+    >>> reporter = ConsoleReporter()
     >>> test_result = StringDescription().execute(reporter)  # doctest: +ELLIPSIS
     str
       ✓ str('foo') equals 'foo'

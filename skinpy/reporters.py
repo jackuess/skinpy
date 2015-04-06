@@ -9,7 +9,7 @@ except ImportError:
     console_colors = None
 
 
-class TerminalReporter(object):
+class ConsoleReporter(object):
     SUCCESS_TEMPLATE = "  ✓ {msg}"
     ERROR_TEMPLATE = "  ✗ {msg}"
     TESTS_FINISHED_TEMPLATE = ("\n{line}\nRan {test_count} tests in "
@@ -54,12 +54,12 @@ class TerminalReporter(object):
 
 
 if console_colors:
-    class ColorTerminalReporter(TerminalReporter):
-        SUCCESS_TEMPLATE = TerminalReporter.SUCCESS_TEMPLATE.replace(
+    class ColorConsoleReporter(ConsoleReporter):
+        SUCCESS_TEMPLATE = ConsoleReporter.SUCCESS_TEMPLATE.replace(
             "✓", "{green}✓{reset}".format(
                 green=console_colors.INTENSE_GREEN.fg,
                 reset=console_colors.RESET))
-        ERROR_TEMPLATE = TerminalReporter.ERROR_TEMPLATE.replace(
+        ERROR_TEMPLATE = ConsoleReporter.ERROR_TEMPLATE.replace(
             "✗", "{green}✗{reset}".format(
                 green=console_colors.INTENSE_RED.fg,
                 reset=console_colors.RESET))
@@ -82,7 +82,7 @@ if console_colors:
                 reset=console_colors.RESET
             ))
 
-    class BlinkingColorTerminalReporter(ColorTerminalReporter):
+    class BlinkingColorConsoleReporter(ColorConsoleReporter):
         def on_error(self, msg):
             with console_colors.Blink():
-                super(BlinkingColorTerminalReporter, self).on_error(msg)
+                super(BlinkingColorConsoleReporter, self).on_error(msg)
